@@ -54,7 +54,7 @@ func TestLoadWithNoArgsLoadsDotEnv(t *testing.T) {
 }
 
 func TestOverloadWithNoArgsOverloadsDotEnv(t *testing.T) {
-	err := OverLoad()
+	err := Overload()
 	pathError := err.(*os.PathError)
 	if pathError == nil || pathError.Op != "open" || pathError.Path != ".env" {
 		t.Errorf("Didn't try and open .env by default")
@@ -68,10 +68,10 @@ func TestLoadFileNotFound(t *testing.T) {
 	}
 }
 
-func TestOverLoadFileNotFound(t *testing.T) {
-	err := OverLoad("somefilethatwillneverexistever.env")
+func TestOverloadFileNotFound(t *testing.T) {
+	err := Overload("somefilethatwillneverexistever.env")
 	if err == nil {
-		t.Errorf("File wasn't found but OverLoad didn't return an error")
+		t.Errorf("File wasn't found but Overload didn't return an error")
 	}
 }
 
@@ -150,7 +150,7 @@ func TestLoadDoesOverride(t *testing.T) {
 		"OPTION_A": "1",
 	}
 
-	loadEnvAndCompareValues(t, OverLoad, envFileName, expectedValues, presets)
+	loadEnvAndCompareValues(t, Overload, envFileName, expectedValues, presets)
 }
 
 func TestLoadPlainEnv(t *testing.T) {
