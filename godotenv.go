@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,7 +57,7 @@ func Load(filenames ...string) (err error) {
 // 		godotenv.OverLoad("fileone", "filetwo")
 //
 // It's implement to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefully set all vars
-func OverLoad(filenames ...string) (err error) {
+func Overload(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
@@ -101,6 +102,47 @@ func UnmarshalBytes(src []byte) (map[string]string, error) {
 	err := parseBytes(src, out)
 
 	return out, err
+}
+
+// Exec loads env vars from the specified filenames (empty map falls back to default)
+// then executes the cmd specified.
+//
+// Simply hooks up os.Stdin/err/out to the command and calls Run().
+//
+// If you want more fine grained control over your command it's recommended
+// that you use `Load()`, `Overload()` or `Read()` and the `os/exec` package yourself.
+func Exec(filenames []string, cmd string, cmdArgs []string, overload bool) error {
+	op := Load
+	if overload {
+		op = Overload
+	}
+	if err := op(filenames...); err != nil {
+		return err
+	}
+
+	command := exec.Command(cmd, cmdArgs...)
+	command.Stdin = os.Stdin
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	return command.Run()
+}
+
+// Write serializes the given environment and writes it to a file.
+func Write(envMap map[string]string, filename string) error {
+	content, err := Marshal(envMap)
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(content + "\n")
+	if err != nil {
+		return err
+	}
+	return file.Sync()
 }
 
 // Marshal outputs the given environment as a dotenv-formatted environment file.
